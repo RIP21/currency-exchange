@@ -1,0 +1,63 @@
+{
+  "name": "currency-exchange",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test --env=jsdom",
+    "lint": "eslint src rewires",
+    "lint:fix": "npm run lint -- --fix",
+    "precommit": "npm run lint -s"
+  },
+  "engines": {
+    "node": "^8.0.0",
+    "npm": "^5.0.0",
+    "yarn": "^1.0.1"
+  },
+  "devDependencies": {
+    "babel-plugin-styled-components": "^1.2.0",
+    "eslint-config-prettier": "^2.3.0",
+    "eslint-plugin-prettier": "^2.2.0",
+    "husky": "^0.14.3",
+    "prettier": "^1.6.1",
+    "prop-types": "^15.5.10",
+    "react-app-rewire-styled-components": "^3.0.0",
+    "react-app-rewired": "1.2.7",
+    "react-scripts": "1.0.13",
+    "redux-devtools": "^3.4.0",
+    "redux-devtools-extension": "^2.13.2",
+    "stylelint": "^8.0.0",
+    "stylelint-config-standard": "^17.0.0",
+    "stylelint-config-styled-components": "^0.1.1"
+  },
+  "dependencies": {
+    "axios": "^0.16.2",
+    "history": "^4.7.2",
+    "lodash": "^4.17.4",
+    "numeral": "^2.0.6",
+    "polished": "^1.7.0",
+    "react": "^16.0.0-rc.2",
+    "react-dom": "^16.0.0-rc.2",
+    "react-redux": "^5.0.6",
+    "react-slick": "^0.15.4",
+    "rebass": "^1.0.3",
+    "recompose": "^0.25.0",
+    "redux": "^3.7.2",
+    "redux-saga": "^0.15.6",
+    "redux-thunk": "^2.2.0",
+    "reselect": "^3.0.1",
+    "slick-carousel": "^1.7.1",
+    "styled-components": "^2.1.2",
+    "styled-normalize": "^2.2.1"
+  },
+  "stylelint": {
+    "processors": [
+      "stylelint-processor-styled-components"
+    ],
+    "extends": [
+      "stylelint-config-standard",
+      "stylelint-config-styled-components"
+    ],
+    "syntax": "scss"
+  }
+}

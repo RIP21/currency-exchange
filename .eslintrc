@@ -1,0 +1,27 @@
+{
+  "extends": [
+    "react-app",
+    "prettier",
+    "prettier/react"
+  ],
+  "plugins": [
+    "prettier"
+  ],
+  "rules": {
+    "react/jsx-sort-props": [
+      1,
+      {
+        "callbacksLast": true
+      }
+    ],
+    "react/sort-prop-types": [
+      1,
+      {
+        "callbacksLast": true
+      }
+    ],
+    "react/jsx-no-bind": 1,
+    "prettier/prettier": [1 , {"singleQuote": true}],
+    "prefer-const": 2
+  }
+}

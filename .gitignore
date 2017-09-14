@@ -1,0 +1,33 @@
+.DS_Store
+.capistrano
+/npm-debug.log
+build
+sourcemaps
+dist
+
+# VIM
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+/tmp
+.tern-*
+
+# node.js
+#
+node_modules/
+npm-debug.log
+
+# BUCK
+buck-out/
+\.buckd/
+android/app/libs
+android/keystores/debug.keystore
+
+# VScode
+.vscode
+jsconfig.json
+/workaxle-desktop.iml
+/.idea/
