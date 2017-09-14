@@ -3,7 +3,7 @@ import { Flex, Input as RInput, Heading, Small } from 'rebass';
 import styled from 'styled-components';
 import { FIELDS } from 'constants/exchange';
 
-const StyledInput = styled(RInput).attrs({
+const Input = styled(RInput).attrs({
   autoComplete: 'off',
   placeholder: 0
 })`
@@ -34,7 +34,7 @@ class SliderCard extends React.PureComponent {
       <Page>
         <Heading>{currency}</Heading>
         <Flex align="flex-end" direction="column">
-          <StyledInput
+          <Input
             name={name}
             value={value ? prefix + value : value}
             onChange={onChange}
