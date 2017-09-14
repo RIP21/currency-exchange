@@ -1,8 +1,13 @@
 import React from 'react';
-import { Flex, Input, Heading, Small } from 'rebass';
+import { Flex, Input as RInput, Heading, Small } from 'rebass';
 import styled from 'styled-components';
+import { FIELDS } from 'constants/exchange';
 
-const StyledInput = Input.extend`
+const StyledInput = styled(RInput).attrs({
+  autoComplete: 'off',
+  placeholder: 0
+})`
+  text-align: right; 
   box-shadow: none;
   font-size: 40px;
   padding: 20px;
@@ -18,22 +23,23 @@ const Page = styled.div`
   min-height: 200px;
   max-height: 100%;
   padding: 20px;
+  cursor: move;
 `;
 
 class SliderCard extends React.PureComponent {
   render() {
-    const { currency, reverseRate, onChange, name, value } = this.props;
+    const { currency, forOneMessage, onChange, name, value } = this.props;
+    const prefix = name === FIELDS.TO ? '+' : '-';
     return (
       <Page>
         <Heading>{currency}</Heading>
         <Flex align="flex-end" direction="column">
           <StyledInput
             name={name}
-            placeholder={0}
-            value={value}
+            value={value ? prefix + value : value}
             onChange={onChange}
           />
-          <Small>{reverseRate}</Small>
+          <Small>{forOneMessage}</Small>
         </Flex>
       </Page>
     );

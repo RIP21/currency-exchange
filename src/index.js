@@ -9,7 +9,7 @@ import createStore from 'redux/index';
 
 import App from './App';
 
-import registerServiceWorker from 'registerServiceWorker';
+import registerServiceWorker from './registerServiceWorker';
 
 const store = createStore({});
 

@@ -2,7 +2,8 @@ import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import Exchange from './Exchange';
 import { getRates, getIsLoaded, getError } from 'redux/selectors/data';
-import { branch, compose, renderNothing } from 'recompose';
+import { branch, compose, renderNothing, renderComponent } from 'recompose';
+import Error from 'components/Error';
 
 const mapStateToProps = createStructuredSelector({
   rates: getRates,
@@ -10,7 +11,18 @@ const mapStateToProps = createStructuredSelector({
   error: getError
 });
 
+const withRenderNothingUntilLoaded = branch(
+  props => !props.isLoaded,
+  renderNothing
+);
+
+const withRenderErrorMessageIfError = branch(
+  props => props.error !== null,
+  renderComponent(Error)
+);
+
 export default compose(
   connect(mapStateToProps, {}),
-  branch(props => !props.isLoaded, renderNothing)
+  withRenderErrorMessageIfError,
+  withRenderNothingUntilLoaded
 )(Exchange);

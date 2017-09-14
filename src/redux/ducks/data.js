@@ -6,7 +6,7 @@ export const LOAD_RATES = createAsyncAction('rates/LOAD');
 const initialState = {
   isLoaded: false,
   rates: {},
-  error: {}
+  error: null
 };
 
 const handlers = {
@@ -14,7 +14,7 @@ const handlers = {
     return state;
   },
   [LOAD_RATES.SUCCESS]: (state, { payload }) => {
-    return { ...state, rates: payload.data, isLoaded: true };
+    return { ...state, rates: payload.data, isLoaded: true, error: null };
   },
   [LOAD_RATES.FAILURE]: (state, { payload }) => {
     return { ...state, error: payload.error };

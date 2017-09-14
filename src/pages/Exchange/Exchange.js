@@ -1,122 +1,168 @@
 import React from 'react';
 import { Box, Flex, ButtonCircle, Divider } from 'rebass';
-import numeral from 'numeral';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import CurrencySlider from './CurrencySlider';
-import { CURRENCIES } from './constants';
-
-const FROM = 'from';
-const TO = 'to';
-
-const formatWithLimitedFloat = value => numeral(value).format('0.00');
-
-const formatNumber = (value, symbol, userInput = false) => {
-  return `${symbol}${userInput ? value : formatWithLimitedFloat(value)}`;
-};
-
-const checkStartsWithPlusOrMinus = value => {
-  const stringifiedValue = value.toString();
-  const firstSymbol = stringifiedValue.charAt(0);
-  return firstSymbol === '+' || firstSymbol === '-';
-};
-
-const removeSymbol = value => {
-  const stringifiedValue = value.toString();
-  if (checkStartsWithPlusOrMinus(value)) {
-    return stringifiedValue.length > 1
-      ? stringifiedValue.substring(1, value.length)
-      : '';
-  } else {
-    return stringifiedValue;
-  }
-};
-
-const validateInput = value => {
-  return value === '' || /[0-9]/.test(value) || /^[0-9]*[.][0-9]+$/.test(value);
-};
+import * as Helpers from 'helpers/exchange';
+import { CURRENCIES, FIELDS } from 'constants/exchange';
 
 class Exchange extends React.Component {
-  state = {
-    fromCurrency: CURRENCIES.USD,
-    toCurrency: CURRENCIES.EUR,
-    from: '',
-    to: ''
+  initialState = {
+    [FIELDS.FROM_CURR]: CURRENCIES.USD.TEXT,
+    [FIELDS.TO_CURR]: CURRENCIES.EUR.TEXT,
+    [FIELDS.FROM]: '',
+    [FIELDS.TO]: '',
+    exchangeButtonDisabled: true
   };
 
-  //
-  // onSlide = (direction) => (_, nextIndex) => {
-  //   const field = direction === TO ? 'toCurrency' : 'fromCurrency';
-  //   this.setState( {[field]: getCurrencyById(nextIndex)} )
-  // }
+  state = {
+    ...this.initialState
+  };
 
-  onChange = ({ target: { name: type, value } }) => {
-    const sanitizedValue = removeSymbol(value);
-    if (validateInput(sanitizedValue)) {
-      const symbol = type === FROM ? '-' : '+';
-      const shouldFormat = sanitizedValue !== '';
-      this.setState({
-        [type]: shouldFormat ? formatNumber(sanitizedValue, symbol, true) : ''
-      });
-      this.calculateFromTo(type, sanitizedValue);
+  //We check here only from, since they are depend one on another so we can check only one
+  inputsArePopulated = () => {
+    return Helpers.extractValue(this.state.from) !== '';
+  };
+
+  recalculateIfRateChanged = ({ rates: prevRates }) => {
+    const { fromCurrency, toCurrency } = this.state;
+    const ratesChanged =
+      this.getRate(fromCurrency, toCurrency) !==
+      this.getRate(fromCurrency, toCurrency, prevRates);
+    if (ratesChanged && this.inputsArePopulated()) {
+      this.recalculateInputsOnRatesChange();
     }
   };
 
-  extractRate = (
-    fromCurrency = this.state.fromCurrency,
-    toCurrency = this.state.toCurrency
-  ) => {
-    if (fromCurrency !== toCurrency) {
-      return this.props.rates[fromCurrency].rates[toCurrency];
+  componentWillReceiveProps(prevProps) {
+    this.recalculateIfRateChanged(prevProps);
+  }
+
+  onSlide = direction => nextIndex => {
+    const field = direction === FIELDS.TO ? FIELDS.TO_CURR : FIELDS.FROM_CURR;
+    this.setState({ [field]: Helpers.getCurrencyTextById(nextIndex) });
+    if (this.inputsArePopulated()) {
+      this.calculateFromToInputs(
+        direction,
+        Helpers.extractValue(this.state[direction]),
+        true
+      );
+    }
+  };
+
+  onToSlide = this.onSlide(FIELDS.TO);
+  onFromSlide = this.onSlide(FIELDS.FROM);
+
+  onChange = ({ target: { name: direction, value: inputString } }) => {
+    const value = Helpers.extractValue(inputString);
+    if (Helpers.validateInput(value)) {
+      this.setState({
+        [direction]: value !== '' ? Helpers.formatNumber(value, true) : ''
+      });
+      this.calculateFromToInputs(direction, value);
+    }
+  };
+
+  getRate = (fromCurrency, toCurrency, rates = this.props.rates) => {
+    const notSameCurrency = fromCurrency !== toCurrency;
+    if (notSameCurrency) {
+      return rates[fromCurrency].rates[toCurrency];
     } else {
       return 1;
     }
   };
 
-  calculateFromTo = (type, value) => {
+  recalculateInputsOnRatesChange = () => {
+    const { fromCurrency, toCurrency, from } = this.state;
+    const fromValue = Helpers.extractValue(from);
+    const newTo = fromValue * this.getRate(fromCurrency, toCurrency);
+    this.setState({
+      [FIELDS.FROM]: Helpers.formatNumber(Helpers.extractValue(from)),
+      [FIELDS.TO]: Helpers.formatNumber(newTo)
+    });
+  };
+
+  calculateFromToInputs = (direction, value) => {
     if (value === '') {
-      this.setState({ to: '', from: '' });
+      this.setState({
+        [FIELDS.TO]: '',
+        [FIELDS.FROM]: '',
+        exchangeButtonDisabled: true
+      });
     } else {
       const { fromCurrency, toCurrency } = this.state;
-      if (type === TO) {
-        const result = value * this.extractRate(toCurrency, fromCurrency);
-        this.setState({ from: formatNumber(result, '-') });
+      if (direction === FIELDS.TO) {
+        const result = value * this.getRate(toCurrency, fromCurrency);
+        this.setState({
+          [FIELDS.FROM]: Helpers.formatNumber(result),
+          exchangeButtonDisabled: false
+        });
       } else {
-        const result = value * this.extractRate();
-        this.setState({ to: formatNumber(result, '+') });
+        const result = value * this.getRate(fromCurrency, toCurrency);
+        this.setState({
+          [FIELDS.TO]: Helpers.formatNumber(result),
+          exchangeButtonDisabled: false
+        });
       }
     }
   };
 
+  onExchangeClick = () => {
+    const { to, from, toCurrency, fromCurrency } = this.state;
+    alert(
+      `You successfully exchange ${Helpers.extractValue(
+        from
+      )} ${fromCurrency} to ${Helpers.extractValue(to)} ${toCurrency}`
+    );
+    this.setState(this.initialState);
+  };
+
   render() {
-    const { fromCurrency, toCurrency, from, to } = this.state;
-    const priceForOne = `1 ${fromCurrency} = ${this.extractRate()} ${toCurrency}`;
-    const reverseRate = `1 ${toCurrency} = ${this.extractRate(
+    const {
+      fromCurrency,
+      toCurrency,
+      from,
+      to,
+      exchangeButtonDisabled
+    } = this.state;
+    const directRate = `1 ${fromCurrency} = ${this.getRate(
+      fromCurrency,
+      toCurrency
+    )} ${toCurrency}`;
+    const reverseRate = `1 ${toCurrency} = ${this.getRate(
       toCurrency,
       fromCurrency
     )} ${fromCurrency}`;
+
     return (
       <div>
-        <Flex justify="space-between">
-          <div>{priceForOne}</div>
-          <ButtonCircle>Exchange</ButtonCircle>
+        <Flex align="center" justify="flex-end">
+          <ButtonCircle
+            disabled={exchangeButtonDisabled}
+            onClick={this.onExchangeClick}
+          >
+            Exchange
+          </ButtonCircle>
         </Flex>
         <Box>
           <CurrencySlider
             currency={fromCurrency}
-            name={FROM}
+            forOneMessage={directRate}
+            name={FIELDS.FROM}
             value={from}
             onChange={this.onChange}
+            onSlide={this.onFromSlide}
           />
         </Box>
         <Divider color="#0077cc" w={1} />
         <Box>
           <CurrencySlider
             currency={toCurrency}
-            name={TO}
-            reverseRate={reverseRate}
+            forOneMessage={reverseRate}
+            name={FIELDS.TO}
             value={to}
             onChange={this.onChange}
+            onSlide={this.onToSlide}
           />
         </Box>
       </div>
