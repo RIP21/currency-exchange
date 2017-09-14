@@ -30,7 +30,7 @@ class Exchange extends React.Component {
       parseFloat(
         this.props.wallets[this.state[FIELDS.SOURCE_CURRENCY]].amount.toFixed(2)
       );
-    if (this.inputsArePopulated() && isEnoughMoneyOnWallet) {
+    if (this.isInputsArePopulated() && isEnoughMoneyOnWallet) {
       this.setState({ exchangeButtonDisabled: false });
     } else {
       this.setState({ exchangeButtonDisabled: true });
@@ -46,7 +46,7 @@ class Exchange extends React.Component {
   //We check here only 'source', since they are depend one on another so we can check only one
   //Also dangerous check cause of setState asynchronous nature.
   //That's why we don't have nice a things :D  Redux is helpful in this sorts of things since he is synchronous
-  inputsArePopulated = () => {
+  isInputsArePopulated = () => {
     return (
       this.state.source !== '' &&
       this.state.source !== '0' &&
@@ -59,47 +59,8 @@ class Exchange extends React.Component {
     const ratesChanged =
       this.getRate(sourceCurrency, targetCurrency) !==
       this.getRate(sourceCurrency, targetCurrency, prevRates);
-    if (ratesChanged && this.inputsArePopulated()) {
+    if (ratesChanged && this.isInputsArePopulated()) {
       this.recalculateInputsOnRatesChange();
-    }
-  };
-
-  componentWillReceiveProps(prevProps) {
-    this.recalculateIfRateChanged(prevProps);
-  }
-
-  onSlide = direction => nextIndex => {
-    const field =
-      direction === FIELDS.TARGET
-        ? FIELDS.TARGET_CURRENCY
-        : FIELDS.SOURCE_CURRENCY;
-    this.setState({ [field]: Helpers.getCurrencyTextById(nextIndex) });
-    if (this.inputsArePopulated()) {
-      const { lastEdited } = this.state;
-      this.calculateFromToInputs(lastEdited, this.state[lastEdited]);
-    }
-  };
-
-  onToSlide = this.onSlide(FIELDS.TARGET);
-  onFromSlide = this.onSlide(FIELDS.SOURCE);
-
-  onChange = ({ target: { name: direction, value: inputString } }) => {
-    const value = Helpers.extractValue(inputString);
-    if (Helpers.validateInput(value)) {
-      this.setState({
-        [direction]: value !== '' ? Helpers.formatNumber(value, true) : '',
-        lastEdited: direction
-      });
-      this.calculateFromToInputs(direction, value);
-    }
-  };
-
-  getRate = (sourceCurrency, targetCurrency, rates = this.props.rates) => {
-    const notSameCurrency = sourceCurrency !== targetCurrency;
-    if (notSameCurrency) {
-      return rates[sourceCurrency].rates[targetCurrency];
-    } else {
-      return 1;
     }
   };
 
@@ -114,7 +75,46 @@ class Exchange extends React.Component {
     });
   };
 
-  calculateFromToInputs = (direction, value) => {
+  componentWillReceiveProps(prevProps) {
+    this.recalculateIfRateChanged(prevProps);
+  }
+
+  onSlide = direction => nextIndex => {
+    const field =
+      direction === FIELDS.TARGET
+        ? FIELDS.TARGET_CURRENCY
+        : FIELDS.SOURCE_CURRENCY;
+    this.setState({ [field]: Helpers.getCurrencyTextById(nextIndex) });
+    if (this.isInputsArePopulated()) {
+      const { lastEdited } = this.state;
+      this.calculateSourceTargetInputs(lastEdited, this.state[lastEdited]);
+    }
+  };
+
+  onSourceSlide = this.onSlide(FIELDS.SOURCE);
+  onTargetSlide = this.onSlide(FIELDS.TARGET);
+
+  onChange = ({ target: { name: direction, value: inputString } }) => {
+    const value = Helpers.extractValue(inputString);
+    if (Helpers.validateInput(value)) {
+      this.setState({
+        [direction]: value !== '' ? Helpers.formatNumber(value, true) : '',
+        [FIELDS.LAST_EDITED]: direction
+      });
+      this.calculateSourceTargetInputs(direction, value);
+    }
+  };
+
+  getRate = (sourceCurrency, targetCurrency, rates = this.props.rates) => {
+    const notSameCurrency = sourceCurrency !== targetCurrency;
+    if (notSameCurrency) {
+      return rates[sourceCurrency].rates[targetCurrency];
+    } else {
+      return 1;
+    }
+  };
+
+  calculateSourceTargetInputs = (direction, value) => {
     if (value === '') {
       this.setState({
         [FIELDS.TARGET]: '',
@@ -144,7 +144,6 @@ class Exchange extends React.Component {
     const { target, source, targetCurrency, sourceCurrency } = this.state;
     this.props.onExchange(sourceCurrency, source, targetCurrency, target);
     this.props.onExchangeClose();
-    this.setState(this.initialState);
   };
 
   render() {
@@ -191,7 +190,7 @@ class Exchange extends React.Component {
             value={source}
             youHaveMessage={sourceHaveMessage}
             onChange={this.onChange}
-            onSlide={this.onFromSlide}
+            onSlide={this.onSourceSlide}
           />
         </Box>
         <Divider color="#0077cc" w={1} />
@@ -203,7 +202,7 @@ class Exchange extends React.Component {
             value={target}
             youHaveMessage={targetHaveMessage}
             onChange={this.onChange}
-            onSlide={this.onToSlide}
+            onSlide={this.onTargetSlide}
           />
         </Box>
       </div>
