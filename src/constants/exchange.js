@@ -1,6 +1,7 @@
 export const FIELDS = {
-  FROM: 'from',
-  TO: 'to',
-  FROM_CURR: 'fromCurrency',
-  TO_CURR: 'toCurrency'
+  SOURCE: 'source',
+  TARGET: 'target',
+  SOURCE_CURRENCY: 'sourceCurrency',
+  TARGET_CURRENCY: 'targetCurrency',
+  LAST_EDITED: 'lastEdited'
 };

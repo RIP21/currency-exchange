@@ -37,7 +37,7 @@ class SliderCard extends React.PureComponent {
       value,
       youHaveMessage
     } = this.props;
-    const prefix = name === FIELDS.TO ? '+' : '-';
+    const prefix = name === FIELDS.TARGET ? '+' : '-';
     return (
       <Page>
         <Flex direction="column">

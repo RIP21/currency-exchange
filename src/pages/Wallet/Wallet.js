@@ -11,7 +11,7 @@ class Wallet extends React.Component {
           {map(wallets, wallet => {
             return (
               <Box key={wallet.id} m={10}>
-                {wallet.amount} {wallet.currency} <br />
+                {wallet.amount.toFixed(2)} {wallet.currency} <br />
               </Box>
             );
           })}

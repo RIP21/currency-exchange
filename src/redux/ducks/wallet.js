@@ -1,11 +1,18 @@
+import Big from 'big.js';
 import { createReducer } from 'helpers/redux';
 import { CURRENCIES } from 'constants/global';
+
 // ========================= ACTIONS ===========================//
 export const EXCHANGE = 'wallet/EXCHANGE';
-export const exchange = (fromCurrency, fromAmount, toCurrency, toAmount) => {
+export const exchange = (
+  sourceCurrency,
+  sourceAmount,
+  targetCurrency,
+  targetAmount
+) => {
   return {
     type: EXCHANGE,
-    payload: { fromCurrency, fromAmount, toCurrency, toAmount }
+    payload: { sourceCurrency, sourceAmount, targetCurrency, targetAmount }
   };
 };
 
@@ -15,17 +22,17 @@ const initialState = {
     [CURRENCIES.USD.TEXT]: {
       id: CURRENCIES.USD.ID,
       currency: CURRENCIES.USD.TEXT,
-      amount: 100
+      amount: new Big(200)
     },
     [CURRENCIES.EUR.TEXT]: {
       id: CURRENCIES.EUR.ID,
       currency: CURRENCIES.EUR.TEXT,
-      amount: 150
+      amount: new Big(200)
     },
     [CURRENCIES.GBP.TEXT]: {
       id: CURRENCIES.GBP.ID,
       currency: CURRENCIES.GBP.TEXT,
-      amount: 200
+      amount: new Big(200)
     }
   }
 };
@@ -33,13 +40,15 @@ const initialState = {
 const handlers = {
   [EXCHANGE]: (
     state,
-    { payload: { fromCurrency, fromAmount, toCurrency, toAmount } }
+    { payload: { sourceCurrency, sourceAmount, targetCurrency, targetAmount } }
   ) => {
     const cloneWallets = { ...state.wallets };
-    cloneWallets[fromCurrency].amount =
-      cloneWallets[fromCurrency].amount - parseFloat(fromAmount);
-    cloneWallets[toCurrency].amount =
-      cloneWallets[toCurrency].amount + parseFloat(toAmount);
+    cloneWallets[sourceCurrency].amount = cloneWallets[
+      sourceCurrency
+    ].amount.minus(parseFloat(sourceAmount));
+    cloneWallets[targetCurrency].amount = cloneWallets[
+      targetCurrency
+    ].amount.plus(parseFloat(targetAmount));
 
     return { ...state, wallets: cloneWallets };
   }

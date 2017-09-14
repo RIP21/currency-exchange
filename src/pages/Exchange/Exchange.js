@@ -7,13 +7,15 @@ import * as Helpers from 'helpers/exchange';
 import { FIELDS } from 'constants/exchange';
 import { CURRENCIES } from 'constants/global';
 import ArrowBackIcon from 'react-icons/lib/fa/arrow-left';
+import Big from 'big.js';
 
 class Exchange extends React.Component {
   initialState = {
-    [FIELDS.FROM_CURR]: CURRENCIES.USD.TEXT,
-    [FIELDS.TO_CURR]: CURRENCIES.EUR.TEXT,
-    [FIELDS.FROM]: '',
-    [FIELDS.TO]: '',
+    [FIELDS.SOURCE_CURRENCY]: CURRENCIES.USD.TEXT,
+    [FIELDS.TARGET_CURRENCY]: CURRENCIES.EUR.TEXT,
+    [FIELDS.SOURCE]: '',
+    [FIELDS.TARGET]: '',
+    [FIELDS.LAST_EDITED]: FIELDS.TARGET,
     exchangeButtonDisabled: true
   };
 
@@ -23,7 +25,10 @@ class Exchange extends React.Component {
 
   handleButtonDisabled = () => {
     const isEnoughMoneyOnWallet =
-      this.state.from <= this.props.wallets[this.state.fromCurrency].amount;
+      this.state.source <=
+      parseFloat(
+        this.props.wallets[this.state[FIELDS.SOURCE_CURRENCY]].amount.toFixed(2)
+      );
     if (this.inputsArePopulated() && isEnoughMoneyOnWallet) {
       this.setState({ exchangeButtonDisabled: false });
     } else {
@@ -31,24 +36,28 @@ class Exchange extends React.Component {
     }
   };
 
-  componentDidUpdate(_, { to: prevTo, from: prevFrom }) {
-    if (prevTo !== this.state.to || prevFrom !== this.state.from) {
+  componentDidUpdate(_, { target: prevTarget, source: prevSource }) {
+    if (prevTarget !== this.state.target || prevSource !== this.state.source) {
       this.handleButtonDisabled();
     }
   }
 
-  //We check here only from, since they are depend one on another so we can check only one
+  //We check here only 'source', since they are depend one on another so we can check only one
   //Also dangerous check cause of setState asynchronous nature.
-  // That's why we don't have nice a things and Redux is helpful in this sorts ofr operations :D
+  //That's why we don't have nice a things :D  Redux is helpful in this sorts of things since he is synchronous
   inputsArePopulated = () => {
-    return this.state.from !== '';
+    return (
+      this.state.source !== '' &&
+      this.state.source !== '0' &&
+      this.state.source !== '0.00'
+    );
   };
 
   recalculateIfRateChanged = ({ rates: prevRates }) => {
-    const { fromCurrency, toCurrency } = this.state;
+    const { sourceCurrency, targetCurrency } = this.state;
     const ratesChanged =
-      this.getRate(fromCurrency, toCurrency) !==
-      this.getRate(fromCurrency, toCurrency, prevRates);
+      this.getRate(sourceCurrency, targetCurrency) !==
+      this.getRate(sourceCurrency, targetCurrency, prevRates);
     if (ratesChanged && this.inputsArePopulated()) {
       this.recalculateInputsOnRatesChange();
     }
@@ -59,96 +68,106 @@ class Exchange extends React.Component {
   }
 
   onSlide = direction => nextIndex => {
-    const field = direction === FIELDS.TO ? FIELDS.TO_CURR : FIELDS.FROM_CURR;
+    const field =
+      direction === FIELDS.TARGET
+        ? FIELDS.TARGET_CURRENCY
+        : FIELDS.SOURCE_CURRENCY;
     this.setState({ [field]: Helpers.getCurrencyTextById(nextIndex) });
     if (this.inputsArePopulated()) {
-      this.calculateFromToInputs(direction, this.state[direction], true);
+      const { lastEdited } = this.state;
+      this.calculateFromToInputs(lastEdited, this.state[lastEdited]);
     }
   };
 
-  onToSlide = this.onSlide(FIELDS.TO);
-  onFromSlide = this.onSlide(FIELDS.FROM);
+  onToSlide = this.onSlide(FIELDS.TARGET);
+  onFromSlide = this.onSlide(FIELDS.SOURCE);
 
   onChange = ({ target: { name: direction, value: inputString } }) => {
     const value = Helpers.extractValue(inputString);
     if (Helpers.validateInput(value)) {
       this.setState({
-        [direction]: value !== '' ? Helpers.formatNumber(value, true) : ''
+        [direction]: value !== '' ? Helpers.formatNumber(value, true) : '',
+        lastEdited: direction
       });
       this.calculateFromToInputs(direction, value);
     }
   };
 
-  getRate = (fromCurrency, toCurrency, rates = this.props.rates) => {
-    const notSameCurrency = fromCurrency !== toCurrency;
+  getRate = (sourceCurrency, targetCurrency, rates = this.props.rates) => {
+    const notSameCurrency = sourceCurrency !== targetCurrency;
     if (notSameCurrency) {
-      return rates[fromCurrency].rates[toCurrency];
+      return rates[sourceCurrency].rates[targetCurrency];
     } else {
       return 1;
     }
   };
 
   recalculateInputsOnRatesChange = () => {
-    const { fromCurrency, toCurrency, from } = this.state;
-    const fromValue = Helpers.extractValue(from);
-    const newTo = fromValue * this.getRate(fromCurrency, toCurrency);
+    const { sourceCurrency, targetCurrency, source } = this.state;
+    const newTarget = new Big(source)
+      .times(this.getRate(sourceCurrency, targetCurrency))
+      .toFixed(2);
     this.setState({
-      [FIELDS.FROM]: Helpers.formatNumber(Helpers.extractValue(from)),
-      [FIELDS.TO]: Helpers.formatNumber(newTo)
+      [FIELDS.SOURCE]: Helpers.formatNumber(source),
+      [FIELDS.TARGET]: Helpers.formatNumber(newTarget)
     });
   };
 
   calculateFromToInputs = (direction, value) => {
     if (value === '') {
       this.setState({
-        [FIELDS.TO]: '',
-        [FIELDS.FROM]: ''
+        [FIELDS.TARGET]: '',
+        [FIELDS.SOURCE]: ''
       });
     } else {
-      const { fromCurrency, toCurrency } = this.state;
-      if (direction === FIELDS.TO) {
-        const result = value * this.getRate(toCurrency, fromCurrency);
+      const { sourceCurrency, targetCurrency } = this.state;
+      if (direction === FIELDS.TARGET) {
+        const result = new Big(value)
+          .times(this.getRate(targetCurrency, sourceCurrency))
+          .toFixed(2);
         this.setState({
-          [FIELDS.FROM]: Helpers.formatNumber(result)
+          [FIELDS.SOURCE]: Helpers.formatNumber(result)
         });
       } else {
-        const result = value * this.getRate(fromCurrency, toCurrency);
+        const result = new Big(value)
+          .times(this.getRate(sourceCurrency, targetCurrency))
+          .toFixed(2);
         this.setState({
-          [FIELDS.TO]: Helpers.formatNumber(result)
+          [FIELDS.TARGET]: Helpers.formatNumber(result)
         });
       }
     }
   };
 
   onExchangeClick = () => {
-    const { to, from, toCurrency, fromCurrency } = this.state;
-    this.props.onExchange(fromCurrency, from, toCurrency, to);
+    const { target, source, targetCurrency, sourceCurrency } = this.state;
+    this.props.onExchange(sourceCurrency, source, targetCurrency, target);
     this.props.onExchangeClose();
     this.setState(this.initialState);
   };
 
   render() {
     const {
-      fromCurrency,
-      toCurrency,
-      from,
-      to,
+      sourceCurrency,
+      targetCurrency,
+      source,
+      target,
       exchangeButtonDisabled
     } = this.state;
     const { wallets } = this.props;
-    const directRate = `1 ${fromCurrency} = ${this.getRate(
-      fromCurrency,
-      toCurrency
-    )} ${toCurrency}`;
-    const reverseRate = `1 ${toCurrency} = ${this.getRate(
-      toCurrency,
-      fromCurrency
-    )} ${fromCurrency}`;
+    const directRate = `1 ${sourceCurrency} = ${this.getRate(
+      sourceCurrency,
+      targetCurrency
+    )} ${targetCurrency}`;
+    const reverseRate = `1 ${targetCurrency} = ${this.getRate(
+      targetCurrency,
+      sourceCurrency
+    )} ${sourceCurrency}`;
 
-    const sourceHaveMessage = `You have ${wallets[fromCurrency]
-      .amount} ${fromCurrency}`;
-    const targetHaveMessage = `You have ${wallets[toCurrency]
-      .amount} ${toCurrency}`;
+    const sourceHaveMessage = `You have ${wallets[sourceCurrency]
+      .amount} ${sourceCurrency}`;
+    const targetHaveMessage = `You have ${wallets[targetCurrency]
+      .amount} ${targetCurrency}`;
 
     return (
       <div>
@@ -165,10 +184,10 @@ class Exchange extends React.Component {
         </Flex>
         <Box>
           <CurrencySlider
-            currency={fromCurrency}
+            currency={sourceCurrency}
             forOneMessage={directRate}
-            name={FIELDS.FROM}
-            value={from}
+            name={FIELDS.SOURCE}
+            value={source}
             youHaveMessage={sourceHaveMessage}
             onChange={this.onChange}
             onSlide={this.onFromSlide}
@@ -177,10 +196,10 @@ class Exchange extends React.Component {
         <Divider color="#0077cc" w={1} />
         <Box>
           <CurrencySlider
-            currency={toCurrency}
+            currency={targetCurrency}
             forOneMessage={reverseRate}
-            name={FIELDS.TO}
-            value={to}
+            name={FIELDS.TARGET}
+            value={target}
             youHaveMessage={targetHaveMessage}
             onChange={this.onChange}
             onSlide={this.onToSlide}
