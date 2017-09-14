@@ -1,10 +1,12 @@
 import React from 'react';
+import PT from 'prop-types';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import styled from 'styled-components';
 import SliderCard from './SliderCard';
 import map from 'lodash/map';
 import { CURRENCIES } from 'constants/global';
+import { FIELDS } from 'constants/exchange';
 
 const Slider = styled(require('react-slick').default)`margin-bottom: 40px;`;
 
@@ -50,5 +52,15 @@ class CurrencySlider extends React.Component {
     );
   }
 }
+
+CurrencySlider.propTypes = {
+  currency: PT.oneOf(map(CURRENCIES, 'TEXT')).isRequired,
+  forOneMessage: PT.string.isRequired,
+  name: PT.oneOf([FIELDS.TARGET, FIELDS.SOURCE]),
+  value: PT.string.isRequired,
+  youHaveMessage: PT.string.isRequired,
+  onChange: PT.func.isRequired,
+  onSlide: PT.func.isRequired
+};
 
 export default CurrencySlider;

@@ -1,7 +1,10 @@
 import React from 'react';
+import PT from 'prop-types';
 import { Flex, Input as RInput, Heading, Small } from 'rebass';
 import styled from 'styled-components';
 import { FIELDS } from 'constants/exchange';
+import map from 'lodash/map';
+import { CURRENCIES } from 'constants/global';
 
 const Input = styled(RInput).attrs({
   autoComplete: 'off',
@@ -56,5 +59,14 @@ class SliderCard extends React.PureComponent {
     );
   }
 }
+
+SliderCard.propTypes = {
+  currency: PT.oneOf(map(CURRENCIES, 'TEXT')).isRequired,
+  forOneMessage: PT.string.isRequired,
+  name: PT.oneOf([FIELDS.TARGET, FIELDS.SOURCE]),
+  value: PT.string.isRequired,
+  youHaveMessage: PT.string.isRequired,
+  onChange: PT.func.isRequired
+};
 
 export default SliderCard;

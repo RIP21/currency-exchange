@@ -1,4 +1,5 @@
 import React from 'react';
+import PT from 'prop-types';
 import { ButtonCircle, Flex, Box } from 'rebass';
 import map from 'lodash/map';
 
@@ -23,4 +24,12 @@ class Wallet extends React.Component {
     );
   }
 }
+
+Wallet.propTypes = {
+  error: PT.object,
+  isLoaded: PT.bool.isRequired,
+  wallets: PT.object.isRequired,
+  onExchangeOpen: PT.func.isRequired
+};
+
 export default Wallet;

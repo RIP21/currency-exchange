@@ -1,4 +1,5 @@
 import React from 'react';
+import PT from 'prop-types';
 import { Box, Flex, ButtonCircle, Divider } from 'rebass';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -209,5 +210,13 @@ class Exchange extends React.Component {
     );
   }
 }
+
+Exchange.propTypes = {
+  error: PT.object,
+  isLoaded: PT.bool.isRequired,
+  rates: PT.object.isRequired,
+  wallets: PT.object.isRequired,
+  onExchange: PT.func.isRequired
+};
 
 export default Exchange;
