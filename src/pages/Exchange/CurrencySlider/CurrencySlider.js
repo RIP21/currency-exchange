@@ -4,7 +4,7 @@ import 'slick-carousel/slick/slick-theme.css';
 import styled from 'styled-components';
 import SliderCard from './SliderCard';
 import map from 'lodash/map';
-import { CURRENCIES } from 'constants/exchange';
+import { CURRENCIES } from 'constants/global';
 
 const Slider = styled(require('react-slick').default)`margin-bottom: 40px;`;
 
@@ -25,6 +25,7 @@ class CurrencySlider extends React.Component {
       currency,
       value,
       name,
+      youHaveMessage,
       onSlide
     } = this.props;
     return (
@@ -40,6 +41,7 @@ class CurrencySlider extends React.Component {
               forOneMessage={forOneMessage}
               name={name}
               value={value}
+              youHaveMessage={youHaveMessage}
               onChange={onChange}
             />
           </div>

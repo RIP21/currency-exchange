@@ -1,5 +1,5 @@
 import numeral from 'numeral';
-import { CURRENCIES } from '../constants/exchange';
+import { CURRENCIES } from 'constants/global';
 import find from 'lodash/find';
 
 export const getCurrencyTextById = id => {

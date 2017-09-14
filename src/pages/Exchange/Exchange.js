@@ -4,7 +4,9 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import CurrencySlider from './CurrencySlider';
 import * as Helpers from 'helpers/exchange';
-import { CURRENCIES, FIELDS } from 'constants/exchange';
+import { FIELDS } from 'constants/exchange';
+import { CURRENCIES } from 'constants/global';
+import ArrowBackIcon from 'react-icons/lib/fa/arrow-left';
 
 class Exchange extends React.Component {
   initialState = {
@@ -19,9 +21,27 @@ class Exchange extends React.Component {
     ...this.initialState
   };
 
+  handleButtonDisabled = () => {
+    const isEnoughMoneyOnWallet =
+      this.state.from <= this.props.wallets[this.state.fromCurrency].amount;
+    if (this.inputsArePopulated() && isEnoughMoneyOnWallet) {
+      this.setState({ exchangeButtonDisabled: false });
+    } else {
+      this.setState({ exchangeButtonDisabled: true });
+    }
+  };
+
+  componentDidUpdate(_, { to: prevTo, from: prevFrom }) {
+    if (prevTo !== this.state.to || prevFrom !== this.state.from) {
+      this.handleButtonDisabled();
+    }
+  }
+
   //We check here only from, since they are depend one on another so we can check only one
+  //Also dangerous check cause of setState asynchronous nature.
+  // That's why we don't have nice a things and Redux is helpful in this sorts ofr operations :D
   inputsArePopulated = () => {
-    return Helpers.extractValue(this.state.from) !== '';
+    return this.state.from !== '';
   };
 
   recalculateIfRateChanged = ({ rates: prevRates }) => {
@@ -42,11 +62,7 @@ class Exchange extends React.Component {
     const field = direction === FIELDS.TO ? FIELDS.TO_CURR : FIELDS.FROM_CURR;
     this.setState({ [field]: Helpers.getCurrencyTextById(nextIndex) });
     if (this.inputsArePopulated()) {
-      this.calculateFromToInputs(
-        direction,
-        Helpers.extractValue(this.state[direction]),
-        true
-      );
+      this.calculateFromToInputs(direction, this.state[direction], true);
     }
   };
 
@@ -86,22 +102,19 @@ class Exchange extends React.Component {
     if (value === '') {
       this.setState({
         [FIELDS.TO]: '',
-        [FIELDS.FROM]: '',
-        exchangeButtonDisabled: true
+        [FIELDS.FROM]: ''
       });
     } else {
       const { fromCurrency, toCurrency } = this.state;
       if (direction === FIELDS.TO) {
         const result = value * this.getRate(toCurrency, fromCurrency);
         this.setState({
-          [FIELDS.FROM]: Helpers.formatNumber(result),
-          exchangeButtonDisabled: false
+          [FIELDS.FROM]: Helpers.formatNumber(result)
         });
       } else {
         const result = value * this.getRate(fromCurrency, toCurrency);
         this.setState({
-          [FIELDS.TO]: Helpers.formatNumber(result),
-          exchangeButtonDisabled: false
+          [FIELDS.TO]: Helpers.formatNumber(result)
         });
       }
     }
@@ -109,11 +122,8 @@ class Exchange extends React.Component {
 
   onExchangeClick = () => {
     const { to, from, toCurrency, fromCurrency } = this.state;
-    alert(
-      `You successfully exchange ${Helpers.extractValue(
-        from
-      )} ${fromCurrency} to ${Helpers.extractValue(to)} ${toCurrency}`
-    );
+    this.props.onExchange(fromCurrency, from, toCurrency, to);
+    this.props.onExchangeClose();
     this.setState(this.initialState);
   };
 
@@ -125,6 +135,7 @@ class Exchange extends React.Component {
       to,
       exchangeButtonDisabled
     } = this.state;
+    const { wallets } = this.props;
     const directRate = `1 ${fromCurrency} = ${this.getRate(
       fromCurrency,
       toCurrency
@@ -134,9 +145,17 @@ class Exchange extends React.Component {
       fromCurrency
     )} ${fromCurrency}`;
 
+    const sourceHaveMessage = `You have ${wallets[fromCurrency]
+      .amount} ${fromCurrency}`;
+    const targetHaveMessage = `You have ${wallets[toCurrency]
+      .amount} ${toCurrency}`;
+
     return (
       <div>
-        <Flex align="center" justify="flex-end">
+        <Flex align="center" justify="space-between">
+          <ButtonCircle w={100.5} onClick={this.props.onExchangeClose}>
+            <ArrowBackIcon />
+          </ButtonCircle>
           <ButtonCircle
             disabled={exchangeButtonDisabled}
             onClick={this.onExchangeClick}
@@ -150,6 +169,7 @@ class Exchange extends React.Component {
             forOneMessage={directRate}
             name={FIELDS.FROM}
             value={from}
+            youHaveMessage={sourceHaveMessage}
             onChange={this.onChange}
             onSlide={this.onFromSlide}
           />
@@ -161,6 +181,7 @@ class Exchange extends React.Component {
             forOneMessage={reverseRate}
             name={FIELDS.TO}
             value={to}
+            youHaveMessage={targetHaveMessage}
             onChange={this.onChange}
             onSlide={this.onToSlide}
           />

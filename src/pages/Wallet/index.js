@@ -1,17 +1,15 @@
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
-import Exchange from './Exchange';
-import { getRates, getIsLoaded, getError } from 'redux/selectors/data';
+import Wallet from './Wallet';
+import { getIsLoaded, getError } from 'redux/selectors/data';
+import { getWallets } from 'redux/selectors/wallet';
 import { branch, compose, renderNothing, renderComponent } from 'recompose';
 import Error from 'components/Error';
-import { exchange } from 'redux/ducks/wallet';
-import { getWallets } from 'redux/selectors/wallet';
 
 const mapStateToProps = createStructuredSelector({
-  rates: getRates,
+  wallets: getWallets,
   isLoaded: getIsLoaded,
-  error: getError,
-  wallets: getWallets
+  error: getError
 });
 
 const withRenderNothingUntilLoaded = branch(
@@ -25,7 +23,7 @@ const withRenderErrorMessageIfError = branch(
 );
 
 export default compose(
-  connect(mapStateToProps, { onExchange: exchange }),
+  connect(mapStateToProps, {}),
   withRenderErrorMessageIfError,
   withRenderNothingUntilLoaded
-)(Exchange);
+)(Wallet);

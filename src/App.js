@@ -4,6 +4,7 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import styled from 'styled-components';
 import Exchange from './pages/Exchange';
+import Wallet from './pages/Wallet';
 
 const Container = Flex.extend`height: 100vh;`;
 
@@ -15,14 +16,32 @@ const Screen = styled.div`
   border-radius: 4px;
   width: 400px;
   padding: 10px;
+  height: 540px;
 `;
 
 class App extends React.Component {
+  state = {
+    exchangeOpen: false
+  };
+
+  onExchangeOpen = () => {
+    this.setState({ exchangeOpen: true });
+  };
+
+  onExchangeClose = () => {
+    this.setState({ exchangeOpen: false });
+  };
+
   render() {
+    const { exchangeOpen } = this.state;
     return (
       <Container align="center" justify="center">
         <Screen>
-          <Exchange />
+          {exchangeOpen ? (
+            <Exchange onExchangeClose={this.onExchangeClose} />
+          ) : (
+            <Wallet onExchangeOpen={this.onExchangeOpen} />
+          )}
         </Screen>
       </Container>
     );

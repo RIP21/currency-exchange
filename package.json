@@ -38,6 +38,7 @@
     "polished": "^1.7.0",
     "react": "^16.0.0-rc.2",
     "react-dom": "^16.0.0-rc.2",
+    "react-icons": "^2.2.5",
     "react-redux": "^5.0.6",
     "react-slick": "^0.15.4",
     "rebass": "^1.0.3",

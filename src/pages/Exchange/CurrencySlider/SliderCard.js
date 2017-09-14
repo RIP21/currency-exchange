@@ -11,6 +11,7 @@ const Input = styled(RInput).attrs({
   box-shadow: none;
   font-size: 40px;
   padding: 20px;
+  width: 230px;
   &:focus {
     box-shadow: none;
   }
@@ -28,11 +29,21 @@ const Page = styled.div`
 
 class SliderCard extends React.PureComponent {
   render() {
-    const { currency, forOneMessage, onChange, name, value } = this.props;
+    const {
+      currency,
+      forOneMessage,
+      onChange,
+      name,
+      value,
+      youHaveMessage
+    } = this.props;
     const prefix = name === FIELDS.TO ? '+' : '-';
     return (
       <Page>
-        <Heading>{currency}</Heading>
+        <Flex direction="column">
+          <Heading p={24}>{currency}</Heading>
+          <Small>{youHaveMessage}</Small>
+        </Flex>
         <Flex align="flex-end" direction="column">
           <Input
             name={name}
