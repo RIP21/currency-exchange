@@ -14,11 +14,6 @@
     "precommit": "npm run lint -s",
     "deploy": "npm run build && gh-pages -d build"
   },
-  "engines": {
-    "node": "^8.0.0",
-    "npm": "^5.0.0",
-    "yarn": "^1.0.1"
-  },
   "devDependencies": {
     "babel-plugin-styled-components": "^1.2.0",
     "eslint-config-prettier": "^2.3.0",
